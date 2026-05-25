@@ -1,0 +1,280 @@
+@model Documentshare.Models.HomeViewModel
+@{
+    ViewData["Title"] = "Trang chủ - DocShare";
+}
+
+@functions {
+    static string Ext(string ext) => (ext ?? "").ToLower().TrimStart('.');
+    static string FileBadge(string ext) => Ext(ext) switch {
+        "pdf"  => "badge-pdf",
+        "doc" or "docx" => "badge-doc",
+        "xls" or "xlsx" => "badge-xls",
+        "zip" or "rar"  => "badge-zip",
+        "png" or "jpg" or "jpeg" => "badge-img",
+        "ppt" or "pptx" => "badge-ppt",
+        "txt"  => "badge-txt",
+        _ => "badge-other"
+    };
+    static string LevelBadge(string lv) => lv switch {
+        "Cơ bản" => "level-beginner",
+        "Trung cấp" => "level-mid",
+        "Nâng cao" => "level-advanced",
+        "Chuyên sâu" => "level-expert",
+        _ => "level-all"
+    };
+    static string FmtSize(long b) {
+        if (b == 0) return "—";
+        string[] s = {"B","KB","MB","GB"}; int i=0; double v=b;
+        while(v>=1024&&i<s.Length-1){v/=1024;i++;}
+        return $"{v:0.#} {s[i]}";
+    }
+    static string Stars(double r, int count = 0) {
+        var sb = new System.Text.StringBuilder("<span class=\"stars\">");
+        for(int i=1;i<=5;i++) sb.Append(i<=Math.Round(r)?"<i class=\"bi bi-star-fill\"></i>":"<i class=\"bi bi-star text-muted opacity-50\"></i>");
+        sb.Append("</span>");
+        if(count>0) sb.Append($"<span class=\"text-muted ms-1\" style=\"font-size:.7rem;\">({count})</span>");
+        return sb.ToString();
+    }
+}
+
+<!-- ======= HERO ======= -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <div class="d-flex justify-content-center mb-3 animate-float">
+                    <span class="badge rounded-pill px-3 py-2 hero-badge-decorative">
+                        <i class="bi bi-stars text-warning me-1 animate-sparkle"></i> Chia sẻ kiến thức — Mọi lĩnh vực
+                    </span>
+                </div>
+                <h1 class="hero-headline">
+                    Kho Tài Liệu <span class="highlight">Chia Sẻ</span><br>Cho Mọi Người
+                </h1>
+                <p class="hero-sub">
+                    Tìm kiếm, tải xuống và chia sẻ tài liệu học tập, nghiên cứu, chuyên môn — từ IT, kinh tế, y tế đến nghệ thuật và kỹ năng sống.
+                </p>
+
+                <!-- Search -->
+                <div class="search-wrapper">
+                    <form asp-controller="Home" asp-action="Index" method="get">
+                        <div class="row g-2">
+                            <div class="col-md-7">
+                                <div class="input-group">
+                                    <span class="input-group-text border-0 bg-transparent text-muted ps-0 pe-2">
+                                        <i class="bi bi-search fs-5"></i>
+                                    </span>
+                                    <input type="text" name="q" value="@Model.SearchString" class="form-control form-control-premium border-0 ps-0"
+                                           placeholder="Tìm theo tên, tác giả, từ khóa..." style="background:transparent!important;font-size:1rem;" />
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="categoryId" class="form-select form-select-premium">
+                                    <option value="">Tất cả lĩnh vực</option>
+                                    @foreach (var c in Model.Categories)
+                                    {
+                                        <option value="@c.Id" selected="@(Model.SelectedCategoryId==c.Id?"selected":null)">@c.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2 d-grid">
+                                <button type="submit" class="btn btn-premium">Tìm</button>
+                            </div>
+                        </div>
+                        <!-- Advanced filters row -->
+                        <div class="row g-2 mt-1 pt-2" style="border-top:1px solid rgba(255,255,255,0.05);">
+                            <div class="col-auto">
+                                <span class="text-muted" style="font-size:.75rem;line-height:2.4;">
+                                    <i class="bi bi-sliders me-1"></i>Lọc:
+                                </span>
+                            </div>
+                            <div class="col">
+                                <select name="level" class="form-select form-select-premium py-1" style="font-size:.8rem;" onchange="this.form.submit()">
+                                    <option value="" selected="@(string.IsNullOrEmpty(Model.SelectedLevel)?"selected":null)">Cấp độ</option>
+                                    @foreach (var lv in new[]{"Cơ bản","Trung cấp","Nâng cao","Chuyên sâu","Tất cả cấp độ"})
+                                    {
+                                        <option value="@lv" selected="@(Model.SelectedLevel==lv?"selected":null)">@lv</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select name="ext" class="form-select form-select-premium py-1" style="font-size:.8rem;" onchange="this.form.submit()">
+                                    <option value="" selected="@(string.IsNullOrEmpty(Model.SelectedExtension)?"selected":null)">Định dạng</option>
+                                    @foreach (var (label,val) in new[]{("PDF",".pdf"),("Word",".docx"),("Excel",".xlsx"),("PowerPoint",".pptx"),("Zip/Rar",".zip"),("Ảnh",".png"),("Văn bản",".txt")})
+                                    {
+                                        <option value="@val" selected="@(Model.SelectedExtension==val?"selected":null)">@label</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select name="lang" class="form-select form-select-premium py-1" style="font-size:.8rem;" onchange="this.form.submit()">
+                                    <option value="" selected="@(string.IsNullOrEmpty(Model.SelectedLanguage)?"selected":null)">Ngôn ngữ</option>
+                                    @foreach (var lg in new[]{"Tiếng Việt","English","日本語","한국어","中文","Français"})
+                                    {
+                                        <option value="@lg" selected="@(Model.SelectedLanguage==lg?"selected":null)">@lg</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col">
+                                <select name="sort" class="form-select form-select-premium py-1" style="font-size:.8rem;" onchange="this.form.submit()">
+                                    <option value="newest"    selected="@(Model.SortBy=="newest"   ?"selected":null)">Mới nhất</option>
+                                    <option value="downloads" selected="@(Model.SortBy=="downloads"?"selected":null)">Tải nhiều nhất</option>
+                                    <option value="views"     selected="@(Model.SortBy=="views"    ?"selected":null)">Xem nhiều nhất</option>
+                                    <option value="oldest"    selected="@(Model.SortBy=="oldest"   ?"selected":null)">Cũ nhất</option>
+                                </select>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.SearchString) || Model.SelectedCategoryId.HasValue || !string.IsNullOrEmpty(Model.SelectedLevel) || !string.IsNullOrEmpty(Model.SelectedExtension) || !string.IsNullOrEmpty(Model.SelectedLanguage))
+                            {
+                                <div class="col-auto d-flex align-items-center">
+                                    <a asp-action="Index" class="text-muted text-decoration-none" style="font-size:.8rem;">
+                                        <i class="bi bi-x-circle"></i> Xóa lọc
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======= STATS ======= -->
+<section class="container mb-5">
+    <div class="glass-card p-0 overflow-hidden">
+        <div class="stats-strip">
+            <div class="stat-item">
+                <div class="stat-number">@Model.TotalDocuments</div>
+                <div class="stat-label">Tài liệu</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.TotalDownloads</div>
+                <div class="stat-label">Lượt tải</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.TotalViews</div>
+                <div class="stat-label">Lượt xem</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">@Model.TotalCategories</div>
+                <div class="stat-label">Lĩnh vực</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ======= CATEGORIES ======= -->
+<section class="container mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h2 class="section-title"><i class="bi bi-grid-3x3-gap-fill me-2" style="color:var(--primary);"></i>Lĩnh vực tài liệu</h2>
+        <span class="text-muted" style="font-size:.8rem;">@Model.Categories.Count danh mục</span>
+    </div>
+    <div class="row g-2">
+        @foreach (var cat in Model.Categories)
+        {
+            <div class="col-md-6 col-lg-4 col-xl-3">
+                <a asp-action="Index" asp-route-categoryId="@cat.Id" class="text-decoration-none">
+                    <div class="category-card @cat.ColorClass">
+                        <div class="category-icon">
+                            <i class="bi @cat.Icon"></i>
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="category-name">@cat.Name</div>
+                            <div class="category-desc">@cat.Description</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- ======= DOCUMENTS ======= -->
+<section class="container mb-5">
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+        <h2 class="section-title">
+            <i class="bi bi-file-earmark-text-fill me-2" style="color:var(--primary);"></i>
+            @(string.IsNullOrEmpty(Model.SearchString) && !Model.SelectedCategoryId.HasValue ? "Tài liệu mới nhất" : "Kết quả tìm kiếm")
+        </h2>
+        <span class="text-muted" style="font-size:.8rem;">Tìm thấy @Model.Documents.Count tài liệu</span>
+    </div>
+
+    @if (!Model.Documents.Any())
+    {
+        <div class="glass-card empty-state">
+            <div class="empty-state-icon"><i class="bi bi-search"></i></div>
+            <h4 class="fw-bold mb-2">Không tìm thấy tài liệu</h4>
+            <p class="text-muted mb-3">Thử thay đổi từ khóa hoặc bộ lọc của bạn.</p>
+            <a asp-action="Index" class="btn btn-premium-outline"><i class="bi bi-arrow-left me-1"></i>Xem tất cả</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3">
+            @foreach (var doc in Model.Documents)
+            {
+                var avg = doc.Comments.Any() ? doc.Comments.Average(c => c.Rating) : 0.0;
+                var cnt = doc.Comments.Count;
+                <div class="col-sm-6 col-lg-4 col-xl-3">
+                    <div class="glass-card glass-card-hover doc-card p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge-file @FileBadge(doc.FileExtension)">@Ext(doc.FileExtension)</span>
+                            <span class="text-muted" style="font-size:.7rem;">@doc.UploadDate.ToString("dd/MM/yy")</span>
+                        </div>
+
+                        <div class="doc-card-body">
+                            <a asp-controller="Document" asp-action="Details" asp-route-id="@doc.Id" class="doc-title">@doc.Title</a>
+                            <p class="doc-description mb-2">@(string.IsNullOrEmpty(doc.Description) ? "Chưa có mô tả." : doc.Description)</p>
+                        </div>
+
+                        <div class="doc-meta-row mb-3 mt-2">
+                            <span class="doc-meta-item">
+                                <i class="bi bi-folder2 me-1" style="color:var(--primary-light);"></i>
+                                <span style="font-size:.72rem;">@(doc.Category?.Name ?? "Khác")</span>
+                            </span>
+                            <span class="doc-meta-item">
+                                <i class="bi bi-bar-chart-steps me-1"></i>
+                                <span style="font-size:.72rem;">@doc.Level</span>
+                            </span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            @Html.Raw(Stars(avg, cnt))
+                            <div class="d-flex gap-2 text-muted" style="font-size:.75rem;">
+                                <span><i class="bi bi-eye"></i> @doc.ViewCount</span>
+                                <span><i class="bi bi-download"></i> @doc.DownloadCount</span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a asp-controller="Document" asp-action="Download" asp-route-id="@doc.Id"
+                               class="btn btn-premium btn-sm"><i class="bi bi-download me-1"></i>Tải xuống</a>
+                            <a asp-controller="Document" asp-action="Details" asp-route-id="@doc.Id"
+                               class="btn btn-premium-outline btn-sm"><i class="bi bi-info-circle me-1"></i>Chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (Model.Documents.Count >= 12)
+        {
+            <div class="text-center mt-4">
+                <a asp-controller="Document" asp-action="Browse" class="btn btn-premium-outline px-4">
+                    <i class="bi bi-grid me-1"></i>Xem tất cả tài liệu
+                </a>
+            </div>
+        }
+    }
+</section>
+
+<!-- ======= UPLOAD CTA ======= -->
+<section class="container mb-5">
+    <div class="glass-card text-center py-4" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(34,211,238,0.05));border-color:rgba(99,102,241,0.2);">
+        <i class="bi bi-cloud-arrow-up-fill fs-1 mb-3" style="background:linear-gradient(135deg,#818cf8,#22d3ee);-webkit-background-clip:text;-webkit-text-fill-color:transparent;"></i>
+        <h3 class="fw-bold mb-2">Bạn có tài liệu hữu ích?</h3>
+        <p class="text-muted mb-3">Chia sẻ kiến thức của bạn với cộng đồng — mọi lĩnh vực đều được chào đón!</p>
+        <a asp-controller="Document" asp-action="Upload" class="btn btn-premium px-4">
+            <i class="bi bi-upload me-1"></i>Đăng tài liệu ngay
+        </a>
+    </div>
+</section>

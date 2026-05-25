@@ -1,0 +1,15 @@
+ĐỀ CƯƠNG ÔN TẬP TOÁN HỌC KỲ II - LỚP 10
+Trường THPT Chuyên KHTN - Năm học 2026 - 2027
+
+Phần I. Đại số và Giải tích:
+1. Phương trình và hệ phương trình bậc nhất, bậc hai.
+2. Công thức lượng giác cơ bản và ứng dụng.
+3. Bất đẳng thức Cauchy và Cauchy-Schwarz.
+
+Phần II. Hình học:
+1. Phương trình đường thẳng và đường tròn trong mặt phẳng Oxy.
+2. Phương trình Elip, Hypebol và Parabol.
+
+Bài tập tự luyện mẫu:
+Cho phương trình đường tròn (C): (x - 2)^2 + (y + 1)^2 = 25.
+Tìm tọa độ tâm I, bán kính R và viết phương trình tiếp tuyến của (C) tại điểm M(5, 3).
